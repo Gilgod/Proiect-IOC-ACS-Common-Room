@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <title>ACS Common Room</title>
+
+    <!-- Custom CSS over bootstrap -->
+	<link rel="stylesheet" href="style.css"></style>
+</head>
+
+<body>
+
+<!-- Script files -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
+<script src="https://use.fontawesome.com/df9fd9c193.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="utils.js"> </script>
+<script src="canvas_util.js"> </script>
+<script src="canvas.js"> </script>
+<script src="script.js"> </script>
+<script src="sha256.js"> </script>
+<script src="sketchbook.js"> </script>
+
+<!-- Page begins -->
+<div class="main" id="main">
+
+	<!-- Header -->
+	<div class="header" id="header">
+
+		<!-- Logo -->
+		<div class="title" id="title">
+		<img src="res/logo.png">
+		</div>
+
+		<!-- Login -->
+		<div class="login" id="login">
+			<div id="login-details" class="login-details">
+				<button class="btn btn-info .btn-lg" id="details-username">LOGIN</button>
+				<button class="btn btn-info .btn-md" id="details-group">   </button>
+			</div>
+			<div id="login-form" class="login-form">
+				<button id="close_box" type="submit" class="btn btn-default" onclick="hideLogin()">X</button>
+        		<label id="error_text"><b>Invalid Username or Password!</b></label>
+				<label for="usr"><b>Username</b></label>
+				<input type="text" class="form-control" placeholder="Enter Username" id="username"required>
+
+				<label><b>Password</b></label>
+				<input type="password" class="form-control" placeholder="Enter Password" id="password"required>
+
+				<button id="login_btn" type="submit" class="btn btn-default" onclick="onLoginClick()">Login</button>
+			</div>
+		</div>
+
+	</div>
+
+  <!-- Welcome text -->
+  <div class='welcome' id='welcome'><b>Synergize faster</b></div>
+
+	<!-- Map and sketchbooks -->
+	<div class="workspace" id="workspace">
+
+    <nav id='workspace-navigation' class='navbar navbar-default'>
+      <ul class="nav navbar-nav workspace-tabs" id="workspace-tabs">
+        <li id='tab-map' class='active-tab'> <a href='#' onclick='ActivateMap();' class='active-ref'>Map</a> </li>
+        <li id='tab-sketchbook' class='background-tab'> <a href='#' onclick='ActivateScrapbook();' class='background-ref'>Sketchbook</a> </li>
+      </ul>
+    </nav>
+
+	   <div class="canvas-container" id="canvas-container">
+
+       <div id="reserve-form" class="floatbox">
+         <button class='close-btn' type="submit" class="btn btn-default" onclick="CloseReserve()">X</button>
+         <label class='title'><b>Pick Reservation</b></label>
+         <label class='error_text' id="reserve-error"><b>Invalid Username or Password!</b></label>
+         <br/>
+         <label for="reserve-endtime"><b>End Time:</b></label>
+         <input id='reserve-endtime' type="time" class="form-control" placeholder="Enter Username" required>
+
+         <label for="reserve-category" class=''><b>Category:</b></label>
+         <select id='reserve-category' class="selectpicker" onchange="populateReserveSelector()">
+ 					<option>Class</option>
+ 					<option>Homework</option>
+ 					<option>Project</option>
+ 					<option>Workshop</option>
+ 				</select>
+      </br>
+       <label for='reserve-project' class=''><b>Project Name:</b></label>
+         <select id='reserve-project' class="selectpicker">
+ 					<option>Class chat room</option>
+ 					<option>Homework discussion</option>
+ 					<option>Project discussion</option>
+ 					<option>Workshop</option>
+ 				</select>
+
+         <button type="submit" class="btn btn-default normal-btn" onclick="SubmitReserve()">Submit</button>
+       </div>
+
+       <div id="report-form" class="floatbox">
+         <button class='close-btn' type="submit" class="btn btn-default" onclick="CloseReport()">X</button>
+         <label class='title'><b>Report User</b></label>
+         <br/>
+         <label class='error_text' id="report-error"><b>Message cannot be blank!</b></label>
+         <br/>
+         <label><b>Username: <span id='report-username'>anda.florea</span></b></label>
+         <br/>
+         <label for="usr"><b>Message:</b></label>
+         <textarea id='report-message' type="text" rows="4" class="form-control" placeholder="Enter Message"></textarea>
+
+         <button type="submit" class="btn btn-default normal-btn" onclick="SubmitReport()">Submit</button>
+       </div>
+
+       <div id="info-form" class="floatbox">
+         <label class='title'><b>Info</b></label>
+         <br/>
+         <label><b id='info-message'> Ana are mere lololol </b></label>
+         <br/>
+         <button type="submit" class="btn btn-default normal-btn" onclick="CloseMessageBox()">Ok</button>
+       </div>
+
+       <div class='title1' id='reservations'>Reservations</div>
+        <canvas id="map-canvas" width="800" height="500">
+        </canvas>
+     </div>
+
+     <div class="sketchbook-container" id="sketchbook-container">
+       <button type="submit" class="btn btn-default normal-btn" onclick="clearRoom()">Clear</button>
+       <canvas id="sketchbook-canvas" width="800" height="500">
+       </canvas>
+    </div>
+	</div>
+
+	<!-- Chat -->
+	<div class="chat" id="chat">
+	   <nav class="navbar navbar-default" id="chat-navbar">
+ 		<div class="container-fluid" id="container-fluid">
+    		<ul class="nav navbar-nav chat-tabs" id="chat-tabs">
+      		</ul>
+      		<ul class="nav navbar-nav navbar-right right-chat" id='navbar-holder'>
+				<li class="dropdown" id='dropdown-selector'>
+      				<a class="dropdown-toggle" data-toggle="dropdown" href="#">...<span class="caret"></span></a>
+        			<ul class="dropdown-menu" id="chat-dropdown-list">
+          			</ul>
+      			</li>
+      			<li><button type="button" id="search-button"><i class="fa fa-search" aria-hidden="true"></i></button></li>
+    		</ul>
+  		</div>
+	</nav>
+
+	 <div id="chat-container" style="position: relative">
+		<div class="chatbox" id="chatbox">
+			<!-- <div class="msg_holder">
+	 		 	<span class="label label-default">you</span>
+	 			 <input type="text" class="messages" value="hello">
+	 		</div> -->
+		</div>
+
+   		<div class="chatinput-container" id="chatinput-container">
+			<input class="messages" placeholder="Type your message here" type="text" id="user-input-text" onclick='selectAllChatInput' onkeypress='handleChatInput'>
+    		<button id="send-button" onclick="handleSendInput();"  type="submit" class="btn btn-default">></button>
+    	</div>
+
+		<div class="search" id="search-form">
+				<div class="search-form-left" id="search-form-left">
+					<input type="text" class="form-control" placeholder="" id="room-search-input" onClick="this.setSelectionRange(0, this.value.length)">
+					<div class="results-container" id="results-container">
+					</div>
+				</div>
+				<!-- right -->
+				<div class="search-form-right" id="search-form-right">
+				<select class="selectpicker" id="category-select">
+					<option>Class chat room</option>
+					<option>Homework discussion</option>
+					<option>Project discussion</option>
+					<option>Workshop</option>
+				</select>
+				</div>
+	</div>
+  </div>
+	</div>
+</div>
+
+<script>
+
+// the tabs of the chat navbar
+var tabs = $("ul.chat-tabs").find("li");
+var chatNav = document.getElementById('chat-tabs');
+var chatDropdown = document.getElementById('chat-dropdown-list');
+var searchBox = document.getElementById('search-form');
+var searchResults = document.getElementById('results-container');
+var chatbox = document.getElementById('chatbox');
+var chatinputbox = document.getElementById('chatinput-container');
+var chatinput = document.getElementById('user-input-text');
+
+// Login when enter is pressed in the user or pass inputs.
+function onInputKeyPress(e) {
+    if (!e) e = window.event;
+    var keyCode = e.keyCode || e.which;
+    if (e.keyCode == '13') { // endl
+        onLoginClick();
+    }
+}
+
+document.getElementById('username').onkeypress = onInputKeyPress;
+document.getElementById('password').onkeypress = onInputKeyPress;
+chatinput.onclick = function() { this.setSelectionRange(0, this.value.length); }
+chatinput.onkeypress = handleChatInput;
+
+// check if the user is already logged in (from the cookie)
+if (session && session.userData) {
+	showUserData();
+	appendChatInput();
+}
+
+// Show the login button first
+document.getElementById('login-form').style.display = 'none';
+document.getElementById('login-details').style.display = 'inline-block';
+
+var search = document.getElementById('search-button');
+search.onclick = function() {
+	toggleSearchBox();
+}
+
+document.getElementById('room-search-input').placeholder = 'Search for room';
+document.getElementById('room-search-input').onkeypress = function(e) {
+	if (!e) e = window.event;
+    var keyCode = e.keyCode || e.which;
+    if (e.keyCode == '13') { // endl
+    	var query = document.getElementById('room-search-input').value;
+    	var category = document.getElementById('category-select').value;
+        makeSearchRequest(query, category, function(err, data) {
+        	if (err) {
+				console.error(err);
+			} else {
+				while(searchResults.childNodes.length > 0)
+					searchResults.removeChild(searchResults.firstChild);
+				for(var i = 0 ; i < data.length; ++i) {
+					makeResult(data[i]);
+				}
+			}
+        });
+    }
+}
+
+// Init the map canvas
+onCanvasInit();
+onScrapbookInit();
+
+window.addEventListener('resize', onSysResize, false);
+
+/* Check if a cookie has a saved session. */
+if (document.cookie !== '{}' && document.cookie !== '') {
+	session = JSON.parse(document.cookie);
+  showUserData();
+	doSubscribe('General');
+} else {
+  document.getElementById('details-username').onclick = showLoginForm;
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+Requirements:
+    -> node.js & npm
+        sudo apt-get install nodejs npm
+        sudo pacman -S nodejs npm
+    -> run the database (this might take a few seconds to start up)
+    	./start_databse.sh
+    -> run the server
+        cd src
+        nodejs index.js
+    -> open a browser and type https://localhost:8443
+    	please note the certificate is self-signed, you will need to add an
+    	exception to your browser (for now)
+
+
+
+
+Serverul nodejs
+	Serverul nodejs ruleaza peste https si foloseste npm express. Asculta pe portul 8443
+si serveste pagini la cerere pe adresa https://localhost:8443/, redirectionand utilizatorul
+catre pagina corespunzatoare (sau catre index.html)
+- Sistemul de cautare (front-end)
+	Sistemul de cautare este compus dintr-un formular care apare atunci cand este apasat
+butonul cu imaginea de search. User-ul va completa formularul, iar site-ul va trimite o
+cerere asincrona catre server, asteptand o lista de camere.
+	Lista aceea va fi folosita pentru crearea tab-urilor, pana la un anumit numar(10)
+acestea vor fi puse succesiv in navbar, iar cele ce depasesc acest numar pot fi accesate
+prin intermediul dropdown-ului "...".
+
+- Sistemul de chat
+	Sistemul de chat functioneaza prin randarea unor div-uri (unul pentru fiecare mesaj)
+intr-un container scrollabil, sincronizarea se face prin folosirea a 3 functii ale
+serverului:
+	- send: se trimite un mesaj catre server
+	- subscribe: un user se inscrie la o camera
+	- ping: user-ul va face o cerere de sincronizare catre server, primind inapoi log-urile
+		cele mai actuale de chat.
+	Atunci cand se selecteaza un tab nou, se va sterge container-ul de mesaje si se vor
+reafisa cele corespunzatoare.
+
+-Baza de date:
+	Baza de date este realizata in ElasticSearch si contine 3 indecsi: map, user si report.
+Datele din acesti indecsi sunt sub format JSON, avand urmatoarele proprietati:
+- user: username, password (codificata sha256), group, token
+- map: username, group, id, projectName, category, startTime, endTime
+- report: receiver, message
+	Functionalitatile bazei de date:
+-inserari in acesti indecsi: insertUser, makeReservation, makeReport
+-selectarea informatiilor din baza de date: 
+	getUserData si getUserDateByToken(obtinerea informatiilor din indexul user)
+	getMapData(obtine informatii cu privire la rezervarile realizate pentru ziua respectiva)
+	getReservationById(rezervarile pentru o anumita masa)
+	getReportsForUser(din indexul report au fost extrase informatii referitoare la un anumit user)
+					
+Backend:
+	Login: Autentificarea se face pe baza unui user si a unei parole, prin interogarea bazei de date.
+Ca si raspuns sunt trimite informatiile despre user si despre harta rezervarilor.
+	Verificarea fiecarei cereri se face pe baza unui username si a tokenului.
+	Search: Cautarea proiectelor prin care se vor adauga tab-uri in bara chatului se realizeaza  fie prin 
+			cautarea materiilor in lista predefinita, fie prin adaugarea unor materii noi. 
+			Trebuie specificat faptul ca o data materia activa in chat aceasta nu mai
+			poate fi gasita in bara de cautare.
+	Report: Se introduc noi intrari in indexul report al bazei de date.
+	GetReport: Pentru fiecare user se va intoarce o lista cu toate rapoartele referitoare lui.
+	AddReservation: Se adauga o rezervare in indexul map, doar daca id-ul mesei nu este deja gasit 
+					in lista de rezervari pentru acea masa.
+	
+	
+- Harta:
+	- Harta este desenata folosing html canvas cu easeljs, folosind informatii obtinute din cereri catre backend.
+	- Configuratia hartii este citita din config/room.xml
+	- Aceasta ofera de asemenea o interfata pentru adaugarea de rezervari si raportarea de utilizatori folosind niste pop-up boxes.
+	- Functiile pentru aceasta component:
+		-addReserve: adauga o rezervare in baza de date.
+		-report: adauga un report in baza de data.
+		-getMap: obtine starea valida a bazei de date.
+
+- Sistemul de sketchbook:
+	- Sistemul de sketchbook randeaza folosind direct contextul grafic al canvas-ului.
+	- Acesta se sincronizeaza folosind un sistem asemanator cu chat-ul dar care este baza pe sockets si nu pe requests.
+	- La nivelul backend-ului ruleaza un daemon ce valideaza si replica datele la toti clienti.
+	- Acesta de asemenea poate (ca in cazul sistemului de chat) sa mentina persistenta datelor.
+	- Sketchbook-ul este per canal de chat asa ca atunci cand se selecteaza un tab nou acesta va fi golit si va primii de la 
+	server un burst cu ultimile 10000 (configurabil) de pachete de pe acel canal.
+
+	
+
+
+
