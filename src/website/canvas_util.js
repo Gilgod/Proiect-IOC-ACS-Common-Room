@@ -75,9 +75,9 @@
 
         ctx.save();
 
-        var b = this.text.getBounds();
+        var boundingB = this.text.getBounds();
 
-        this.text.x = this.regX - b.width / 2;
+        this.text.x = this.regX - boundingB.width / 2;
         this.text.y = 2 * this.regY;
 
         this.text.updateContext(ctx);
@@ -88,9 +88,9 @@
 
         ctx.save();
 
-        var b = this.info.getBounds();
+        var boundingA = this.info.getBounds();
 
-        this.info.x = this.regX - b.width / 2;
+        this.info.x = this.regX - boundingA.width / 2;
         this.info.y = 2 * this.regY + 15;
 
         this.info.updateContext(ctx);
